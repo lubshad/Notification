@@ -19,21 +19,27 @@ package com.example.android.eggtimernotifications.ui
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.nfc.Tag
 import android.os.CountDownTimer
 import android.os.SystemClock
+import android.util.Log
 import androidx.core.app.AlarmManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import com.example.android.eggtimernotifications.receiver.AlarmReceiver
 import com.example.android.eggtimernotifications.R
+import com.example.android.eggtimernotifications.util.NotificationWorker
 import com.example.android.eggtimernotifications.util.cancelAllNotifications
-import com.example.android.eggtimernotifications.util.sendNotification
 import kotlinx.coroutines.*
+import java.util.concurrent.TimeUnit
 
 class EggTimerViewModel(private val app: Application) : AndroidViewModel(app) {
 
     private val REQUEST_CODE = 0
     private val TRIGGER_TIME = "TRIGGER_AT"
+    private val TAG = "EggTimerViewModel"
 
     private val minute: Long = 60_000L
     private val second: Long = 1_000L
@@ -42,6 +48,7 @@ class EggTimerViewModel(private val app: Application) : AndroidViewModel(app) {
     private val notifyPendingIntent: PendingIntent
 
     private val alarmManager = app.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    val workManager = WorkManager.getInstance()
     private var prefs =
         app.getSharedPreferences("com.example.android.eggtimernotifications", Context.MODE_PRIVATE)
     private val notifyIntent = Intent(app, AlarmReceiver::class.java)
@@ -125,13 +132,24 @@ class EggTimerViewModel(private val app: Application) : AndroidViewModel(app) {
 
                 // TODO: Step 1.15 call cancel notification
                 notificationManager.cancelAllNotifications()
+                Log.i(TAG, triggerTime.toString())
 
-                AlarmManagerCompat.setExactAndAllowWhileIdle(
-                    alarmManager,
-                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    triggerTime,
-                    notifyPendingIntent
-                )
+
+                val workRequest = OneTimeWorkRequest.Builder(NotificationWorker::class.java)
+                    .setInitialDelay(selectedInterval, TimeUnit.MILLISECONDS)
+                    .build()
+                workManager.enqueue(workRequest)
+
+
+
+
+
+//                AlarmManagerCompat.setExactAndAllowWhileIdle(
+//                    alarmManager,
+//                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
+//                    triggerTime,
+//                    notifyPendingIntent
+//                )
 
                 viewModelScope.launch {
                     saveTime(triggerTime)
@@ -168,7 +186,8 @@ class EggTimerViewModel(private val app: Application) : AndroidViewModel(app) {
      */
     private fun cancelNotification() {
         resetTimer()
-        alarmManager.cancel(notifyPendingIntent)
+        workManager.cancelAllWork()
+//        alarmManager.cancel(notifyPendingIntent)
     }
 
     /**

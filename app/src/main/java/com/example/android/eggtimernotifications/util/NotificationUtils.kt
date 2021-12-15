@@ -24,6 +24,9 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 import com.example.android.eggtimernotifications.MainActivity
 import com.example.android.eggtimernotifications.R
 import com.example.android.eggtimernotifications.receiver.SnoozeReceiver
@@ -61,7 +64,7 @@ fun NotificationManager.sendNotification(messageBody: String, applicationContext
     // TODO: Step 1.3 set title, text and icon to builder
     notificationBuilder.apply {
         setContentTitle(applicationContext.getString(R.string.notification_title))
-        setContentText(applicationContext.getString(R.string.notification_text))
+        setContentText(messageBody)
         setSmallIcon(R.drawable.egg_icon)
         setContentIntent(pendingIntent)
         setAutoCancel(true)
@@ -83,4 +86,19 @@ fun NotificationManager.sendNotification(messageBody: String, applicationContext
 // TODO: Step 1.14 Cancel all notifications
 fun NotificationManager.cancelAllNotifications() {
     cancelAll()
+}
+
+
+
+class NotificationWorker(private val context: Context, workerParams: WorkerParameters) : Worker(context,
+    workerParams
+) {
+    override fun doWork(): Result {
+        val notificationManager = ContextCompat.getSystemService(
+            context,
+            NotificationManager::class.java)as NotificationManager
+        notificationManager.sendNotification(messageBody = context.getString(R.string.eggs_ready), context)
+        return Result.success()
+    }
+
 }

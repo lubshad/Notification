@@ -16,11 +16,13 @@
 
 package com.example.android.eggtimernotifications.ui
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.provider.CalendarContract
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -52,11 +54,26 @@ class EggTimerFragment : Fragment() {
 
         // TODO: Step 1.7 call create channel
 
+        createChannel(channelId = getString(R.string.egg_notification_channel_id), channelName = getString(R.string.egg_notification_channel_name))
+
+
         return binding.root
     }
 
     private fun createChannel(channelId: String, channelName: String) {
         // TODO: Step 1.6 START create a channel
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationChannel =
+                NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+
+            notificationChannel.enableLights(true)
+            notificationChannel.lightColor =Color.RED
+            notificationChannel.enableVibration(true)
+            notificationChannel.description = "Time For Breakfast"
+
+            val notificationManager = requireActivity().getSystemService(NotificationManager::class.java)  as NotificationManager
+            notificationManager.createNotificationChannel(notificationChannel)
+        }
 
         // TODO: Step 1.6 END create a channel
 

@@ -48,7 +48,7 @@ class EggTimerViewModel(private val app: Application) : AndroidViewModel(app) {
     private val notifyPendingIntent: PendingIntent
 
     private val alarmManager = app.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    val workManager = WorkManager.getInstance()
+    private val workManager = WorkManager.getInstance()
     private var prefs =
         app.getSharedPreferences("com.example.android.eggtimernotifications", Context.MODE_PRIVATE)
     private val notifyIntent = Intent(app, AlarmReceiver::class.java)
@@ -132,7 +132,7 @@ class EggTimerViewModel(private val app: Application) : AndroidViewModel(app) {
 
                 // TODO: Step 1.15 call cancel notification
                 notificationManager.cancelAllNotifications()
-                Log.i(TAG, triggerTime.toString())
+                Log.i(TAG, selectedInterval.toString())
 
 
                 val workRequest = OneTimeWorkRequest.Builder(NotificationWorker::class.java)
